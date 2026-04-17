@@ -1,6 +1,8 @@
 import streamlit as st
 import os
 from dotenv import load_dotenv
+import time # Added for typing effect
+
 # Load environment variables first
 load_dotenv()
 
@@ -70,20 +72,34 @@ def main():
             from doctors_hub import render_doctors_hub
             render_doctors_hub(st.session_state.get('username', 'Student'))
         elif page == 'Live Classroom':
-            st.header("Live AI Classroom")
-            topic = st.text_input("Medical Topic", placeholder="Enter a medical topic, e.g., Myocardial Infarction")
-            if st.button("Start Class"):
+            # ---------------------------------------------------------
+            # 🎭 LIVE AI CLASSROOM (Multi-Agent Debate)
+            # ---------------------------------------------------------
+            st.title("🎭 Live AI Classroom")
+            st.info("Experience a multi-agent debate between an AI Teacher and AI Students.")
+            
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                topic = st.text_input("Enter a Medical Topic to Learn:", placeholder="e.g., Myocardial Infarction")
+            with col2:
+                st.write("") # Spacing
+                st.write("")
+                start_btn = st.button("Start Live Class 🚀", use_container_width=True)
+
+            if start_btn:
                 if topic:
-                    script = ClassroomOrchestrator.generate_classroom_script(topic)
+                    st.success(f"Starting Session on: {topic}")
+                    st.markdown("---")
+                    
+                    # Fetching the script from the orchestrator
+                    script = orchestrator.generate_classroom_script(topic)
+                    
+                    # Rendering the multi-agent chat dynamically
                     for turn in script:
-                        role = turn.get("role", "assistant")
-                        name = turn.get("name", "AI")
-                        avatar = turn.get("avatar")
-                        content = turn.get("content", "")
-                        
-                        with st.chat_message(role, avatar=avatar):
-                            st.markdown(f"**{name}**")
-                            st.write(content)
+                        with st.chat_message(turn["role"], avatar=turn["avatar"]):
+                            st.markdown(f"**{turn['name']}**")
+                            st.markdown(turn["content"])
+                        time.sleep(1.5) # Adds a realistic "typing" delay
                 else:
                     st.warning("Please enter a topic before starting the class.")
         else:
