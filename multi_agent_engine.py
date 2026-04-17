@@ -58,7 +58,7 @@ class ClassroomOrchestrator:
                     {"role": "system", "content": "You are a JSON output generator. Output only the requested JSON array."},
                     {"role": "user", "content": prompt}
                 ],
-                model="llama3-70b-8192",
+                model="llama-3.3-70b-versatile",
                 temperature=0.5,
             )
 
