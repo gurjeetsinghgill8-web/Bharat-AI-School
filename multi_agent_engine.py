@@ -1,56 +1,74 @@
 import os
-import time
 import json
+import streamlit as st
 import google.generativeai as genai
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-# Configure Gemini
-api_key = os.getenv("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
-
 class ClassroomOrchestrator:
-    """Orchestrates dynamic AI classroom dialogues using Google Gemini."""
+    """Orchestrates dynamic AI classroom dialogues using Google Gemini at MD/DM Level."""
 
     @staticmethod
     def generate_classroom_script(topic):
-        """
-        यह फंक्शन Gemini AI का इस्तेमाल करके टीचर और AI स्टूडेंट्स के बीच की लाइव स्क्रिप्ट बनाता है।
-        """
-        if not api_key:
-            return ClassroomOrchestrator._get_fallback_script(topic)
+        if not topic:
+            topic = "Advanced Heart Failure Management"
 
-        # Prompt for Gemini to generate a structured multi-agent script
-        prompt = f"""
-        Act as a multi-agent AI orchestrator for a medical classroom. 
-        Generate a highly engaging, professional classroom debate script about the medical topic: "{topic}".
-        
-        The script MUST be a JSON list of exactly 5 dictionaries with these keys:
-        - "role": Use "assistant" for the Teacher and "user" for Students.
-        - "name": Character name (e.g., "Teacher (AI)", "Rahul (AI Student)", "Anjali (AI Student)").
-        - "avatar": Use these emojis: 🧑‍🏫 for Teacher, 🙋‍♂️ for Rahul, 🙋‍♀️ for Anjali.
-        - "content": Detailed dialogue text in English (but the tone should be encouraging for Hindi-speaking learners).
-        
-        Flow:
-        1. Teacher (assistant) introduces {topic} and its clinical significance.
-        2. Rahul (user) asks a doubt about practical application or emergency triage.
-        3. Teacher (assistant) explains technically but simply.
-        4. Anjali (user) asks about first-line protocols or a specific case detail.
-        5. Teacher (assistant) concludes with a key takeaway.
-        
-        Return ONLY the clean JSON list. Do not include markdown tags or intro/outro text.
-        """
-
+        # 1. API Key को सुरक्षित तरीके से निकालना (बिना क्रैश किए)
+        api_key = None
         try:
-            # Use the faster Flash model for responsiveness (Updated to Gemini 2.0)
-            model = genai.GenerativeModel('gemini-2.0-flash')
-            response = model.generate_content(prompt)
+            api_key = st.secrets.get("GEMINI_API_KEY")
+        except:
+            pass
             
-            # Robust parsing of JSON from the response
+        if not api_key:
+            api_key = os.environ.get("GEMINI_API_KEY")
+
+        # अगर चाबी नहीं मिली, तो खिलौना मत दिखाओ, सीधा एरर दिखाओ!
+        if not api_key:
+            return [{
+                "role": "assistant", "name": "🚨 System Alert", "avatar": "❌", 
+                "content": "**ERROR:** GEMINI_API_KEY नहीं मिली है! कृपया Streamlit Secrets में चाबी डालें।"
+            }]
+
+        # 2. असली AI इंजन (Cardiology Level)
+        try:
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-2.0-flash')
+            
+            prompt = f"""
+            You are an advanced Multi-Agent Medical Simulator for postgraduate (MD) doctors.
+            The clinical topic is: "{topic}"
+            
+            Generate a highly technical, deep, and realistic debate between 3 agents:
+            1. Dr. Sen (Senior Cardiologist/Professor) - Explains pathophysiology, ACC/AHA/ESC guidelines, and final protocols.
+            2. Dr. Rahul (Resident) - Asks complex clinical questions about drug interactions, contraindications, or specific patient profiles (e.g., hypotension, renal failure).
+            3. Dr. Anjali (Chief Resident) - Points out recent clinical trials (like PARADIGM-HF, DAPA-HF, etc.) and rare edge cases.
+            
+            STRICT RULES:
+            - DO NOT use generic phrases like "Welcome class", "Good question", or "Let's dive in".
+            - Jump straight into high-yield clinical discussion.
+            - Include exact drug names, dosages, side effects, and trial names.
+            - Make it sound like a real ICU or OPD case discussion.
+            
+            Create exactly 5 turns of conversation.
+            Output ONLY a valid JSON array of objects. Do not include markdown tags like ```json.
+            
+            Format exactly like this:
+            [
+              {{"role": "assistant", "name": "Dr. Sen (Consultant)", "avatar": "🧑⚕️", "content": "text"}},
+              {{"role": "user", "name": "Dr. Rahul (Resident)", "avatar": "👨⚕️", "content": "text"}},
+              {{"role": "assistant", "name": "Dr. Sen (Consultant)", "avatar": "🧑⚕️", "content": "text"}},
+              {{"role": "user", "name": "Dr. Anjali (Chief Resident)", "avatar": "👩⚕️", "content": "text"}},
+              {{"role": "assistant", "name": "Dr. Sen (Consultant)", "avatar": "🧑⚕️", "content": "text"}}
+            ]
+            """
+
+            response = model.generate_content(prompt)
             text = response.text.strip()
+            
+            # JSON को पार्स करना
             if "```json" in text:
                 text = text.split("```json")[1].split("```")[0].strip()
             elif "```" in text:
@@ -60,44 +78,8 @@ class ClassroomOrchestrator:
             return script
             
         except Exception as e:
-            # Fallback to the hardcoded engaging script if the API call fails
-            return ClassroomOrchestrator._get_fallback_script(topic)
-
-    @staticmethod
-    def _get_fallback_script(topic):
-        """Engaging fallback script if the AI model is unavailable."""
-        if not topic:
-            topic = "Heart Failure"
-            
-        return [
-            {
-                "role": "assistant", 
-                "name": "Teacher (AI)", 
-                "avatar": "🧑‍🏫", 
-                "content": f"Welcome class! Today we are discussing an important topic: **{topic}**. Let's start with the fundamental concepts. Who can tell me why this is critical?"
-            },
-            {
-                "role": "user", 
-                "name": "Rahul (AI Student)", 
-                "avatar": "🙋‍♂️", 
-                "content": f"Sir, I have a doubt before we begin. How does {topic} directly affect the emergency triage protocol?"
-            },
-            {
-                "role": "assistant", 
-                "name": "Teacher (AI)", 
-                "avatar": "🧑‍🏫", 
-                "content": "Excellent question, Rahul! It is critical because the 'golden hour' dictates patient survival. If we miss the early signs, the mortality rate increases drastically."
-            },
-            {
-                "role": "user", 
-                "name": "Anjali (AI Student)", 
-                "avatar": "🙋‍♀️", 
-                "content": "Adding to what Rahul asked, what are the first-line protocols we must follow as soon as the patient arrives?"
-            },
-            {
-                "role": "assistant", 
-                "name": "Teacher (AI)", 
-                "avatar": "🧑‍🏫", 
-                "content": "Good point, Anjali. The first line protocol includes immediate stabilization of vitals and checking history. Now, let's dive deeper into a clinical case study..."
-            }
-        ]
+            # अगर AI फेल हो जाए, तो टॉय स्क्रिप्ट नहीं, बल्कि असली एरर दिखाओ!
+            return [{
+                "role": "assistant", "name": "🚨 AI Engine Error", "avatar": "⚠️", 
+                "content": f"AI Engine fail ho gaya: {str(e)}"
+            }]
