@@ -5,4 +5,3 @@ pandas
 fpdf
 duckduckgo-search
 supabase
-google-generativeai
