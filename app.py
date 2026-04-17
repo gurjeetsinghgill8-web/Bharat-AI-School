@@ -96,9 +96,17 @@ def main():
                     
                     # Rendering the multi-agent chat dynamically
                     for turn in script:
-                        with st.chat_message(turn["role"], avatar=turn["avatar"]):
-                            st.markdown(f"**{turn['name']}**")
-                            st.markdown(turn["content"])
+                        # SHOCK ABSORBER: Do not trust the LLM's avatar string
+                        role = turn.get("role", "assistant")
+                        name = turn.get("name", "AI")
+                        content = turn.get("content", "")
+
+                        # Force safe default emojis to prevent Streamlit crashes
+                        safe_avatar = "🧑‍⚕️" if role == "assistant" else "👨‍⚕️"
+
+                        with st.chat_message(role, avatar=safe_avatar):
+                            st.markdown(f"**{name}**")
+                            st.markdown(content)
                         time.sleep(1.5) # Adds a realistic "typing" delay
                 else:
                     st.warning("Please enter a topic before starting the class.")
