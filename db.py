@@ -80,27 +80,36 @@ def create_user_project(username: str, course_name: str, project_option_selected
         "problem_statement": problem_statement,
         "status": "In Progress"
     }
-    response = supabase.table("user_projects").insert(data).execute()
-    return response.data[0]['id'] if response.data else None
+    try:
+        response = supabase.table("user_projects").insert(data).execute()
+        return response.data[0]['id'] if response.data else None
+    except Exception:
+        return None
 
 def get_user_projects(username: str = None):
     """Fetch all projects from Supabase."""
     supabase = get_supabase()
     if not supabase: return []
     
-    query = supabase.table("user_projects").select("*").order("created_at", desc=True)
-    if username:
-        query = query.eq("username", username)
-    
-    response = query.execute()
-    return response.data
+    try:
+        query = supabase.table("user_projects").select("*").order("created_at", desc=True)
+        if username:
+            query = query.eq("username", username)
+        
+        response = query.execute()
+        return response.data
+    except Exception:
+        return []
 
 def save_project_code(project_id: int, code_text: str):
     """Save code block against a user project."""
     supabase = get_supabase()
     if not supabase: return
     
-    supabase.table("user_projects").update({"code_blob": code_text}).eq("id", project_id).execute()
+    try:
+        supabase.table("user_projects").update({"code_blob": code_text}).eq("id", project_id).execute()
+    except Exception:
+        pass
 
 def list_project_on_marketplace(project_id: int, username: str, project_title: str, price: float = 0.0):
     """List an existing user project on the marketplace."""
@@ -113,16 +122,22 @@ def list_project_on_marketplace(project_id: int, username: str, project_title: s
         "project_title": project_title,
         "price": price
     }
-    response = supabase.table("marketplace").insert(data).execute()
-    return response.data[0]['id'] if response.data else None
+    try:
+        response = supabase.table("marketplace").insert(data).execute()
+        return response.data[0]['id'] if response.data else None
+    except Exception:
+        return None
 
 def get_marketplace_projects():
     """Fetch all listed projects in the marketplace from Supabase."""
     supabase = get_supabase()
     if not supabase: return []
     
-    response = supabase.table("marketplace").select("*").order("listed_at", desc=True).execute()
-    return response.data
+    try:
+        response = supabase.table("marketplace").select("*").order("listed_at", desc=True).execute()
+        return response.data
+    except Exception:
+        return []
 
 # ==========================================
 # V2.1 Helper Data Functions (Progress Tracking)
@@ -133,31 +148,37 @@ def update_user_progress(username: str, course_name: str, completion_percentage:
     supabase = get_supabase()
     if not supabase: return
     
-    # Check if exists
-    existing = supabase.table("user_progress").select("id").eq("username", username).eq("course_name", course_name).execute()
-    
-    data = {
-        "username": username,
-        "course_name": course_name,
-        "completion_percentage": completion_percentage
-    }
-    
-    if existing.data:
-        supabase.table("user_progress").update(data).eq("id", existing.data[0]['id']).execute()
-    else:
-        supabase.table("user_progress").insert(data).execute()
+    try:
+        # Check if exists
+        existing = supabase.table("user_progress").select("id").eq("username", username).eq("course_name", course_name).execute()
+        
+        data = {
+            "username": username,
+            "course_name": course_name,
+            "completion_percentage": completion_percentage
+        }
+        
+        if existing.data:
+            supabase.table("user_progress").update(data).eq("id", existing.data[0]['id']).execute()
+        else:
+            supabase.table("user_progress").insert(data).execute()
+    except Exception:
+        pass
 
 def get_user_progress(username: str):
     """Fetch incomplete tracked courses from Supabase."""
     supabase = get_supabase()
     if not supabase: return []
     
-    response = supabase.table("user_progress").select("*")\
-        .eq("username", username)\
-        .lt("completion_percentage", 100)\
-        .order("last_accessed", desc=True)\
-        .execute()
-    return response.data
+    try:
+        response = supabase.table("user_progress").select("*")\
+            .eq("username", username)\
+            .lt("completion_percentage", 100)\
+            .order("last_accessed", desc=True)\
+            .execute()
+        return response.data
+    except Exception:
+        return []
 
 # ==========================================
 # V3.1 Helper Data Functions (Profiling)
@@ -205,16 +226,22 @@ def save_custom_syllabus(username, profile, title, syllabus):
         "custom_course_title": title,
         "generated_syllabus": syllabus
     }
-    response = supabase.table("custom_syllabi").insert(data).execute()
-    return response.data[0]['id'] if response.data else None
+    try:
+        response = supabase.table("custom_syllabi").insert(data).execute()
+        return response.data[0]['id'] if response.data else None
+    except Exception:
+        return None
 
 def get_custom_syllabi(username):
     """Fetch all custom syllabi from Supabase."""
     supabase = get_supabase()
     if not supabase: return []
     
-    response = supabase.table("custom_syllabi").select("*").eq("username", username).order("created_at", desc=True).execute()
-    return response.data
+    try:
+        response = supabase.table("custom_syllabi").select("*").eq("username", username).order("created_at", desc=True).execute()
+        return response.data
+    except Exception:
+        return []
 
 supabase = get_supabase()  # Global client for legacy imports
 if __name__ == "__main__":
