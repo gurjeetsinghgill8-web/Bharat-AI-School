@@ -15,7 +15,7 @@ class ClassroomOrchestrator:
         if not topic:
             topic = "Advanced Heart Failure Management"
 
-        # 1. API Key को सुरक्षित तरीके से निकालना (बिना क्रैश किए)
+        # 1. API Key को सुरक्षित तरीके से निकालना
         api_key = None
         try:
             api_key = st.secrets.get("GEMINI_API_KEY")
@@ -25,20 +25,20 @@ class ClassroomOrchestrator:
         if not api_key:
             api_key = os.environ.get("GEMINI_API_KEY")
 
-        # अगर चाबी नहीं मिली, तो खिलौना मत दिखाओ, सीधा एरर दिखाओ!
         if not api_key:
             return [{
                 "role": "assistant", "name": "🚨 System Alert", "avatar": "❌", 
                 "content": "**ERROR:** GEMINI_API_KEY नहीं मिली है! कृपया Streamlit Secrets में चाबी डालें।"
             }]
 
-        # 2. असली AI इंजन (Cardiology Level)
+        # 2. असली AI इंजन (Cardiology Level) - Using 2.5 to fix Quota Issue
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.0-flash')
+            # gemini-2.5-flash has available quota and is stable in this environment
+            model = genai.GenerativeModel('gemini-2.5-flash')
             
             prompt = f"""
-            You are an advanced Multi-Agent Medical Simulator for postgraduate (MD) doctors.
+            You are an advanced Multi-Agent Medical Simulator for postgraduate (MD/DM) doctors.
             The clinical topic is: "{topic}"
             
             Generate a highly technical, deep, and realistic debate between 3 agents:
@@ -78,7 +78,6 @@ class ClassroomOrchestrator:
             return script
             
         except Exception as e:
-            # अगर AI फेल हो जाए, तो टॉय स्क्रिप्ट नहीं, बल्कि असली एरर दिखाओ!
             return [{
                 "role": "assistant", "name": "🚨 AI Engine Error", "avatar": "⚠️", 
                 "content": f"AI Engine fail ho gaya: {str(e)}"
