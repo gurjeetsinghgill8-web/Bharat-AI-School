@@ -74,14 +74,16 @@ def main():
             topic = st.text_input("Medical Topic", placeholder="Enter a medical topic, e.g., Myocardial Infarction")
             if st.button("Start Class"):
                 if topic:
-                    script = orchestrator.generate_classroom_script(topic)
+                    script = ClassroomOrchestrator.generate_classroom_script(topic)
                     for turn in script:
-                        role = turn["role"]
-                        content = turn["content"]
-                        if role == "Teacher":
-                            st.chat_message("assistant", avatar="👩‍🏫").write(content)
-                        else:
-                            st.chat_message("assistant", avatar="🤖").write(content)
+                        role = turn.get("role", "assistant")
+                        name = turn.get("name", "AI")
+                        avatar = turn.get("avatar")
+                        content = turn.get("content", "")
+                        
+                        with st.chat_message(role, avatar=avatar):
+                            st.markdown(f"**{name}**")
+                            st.write(content)
                 else:
                     st.warning("Please enter a topic before starting the class.")
         else:
