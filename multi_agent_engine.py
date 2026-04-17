@@ -27,29 +27,31 @@ class ClassroomOrchestrator:
             client = Groq(api_key=api_key)
             
             prompt = f"""
-            You are an advanced Multi-Agent Medical Simulator for postgraduate (MD/DM) doctors.
-            The clinical topic is: "{topic}"
+            You are the core Multi-Agent Simulator for "Bharat AI School". The current year is 2026.
+            The learning topic entered by the user is: "{topic}"
             
-            Generate a highly technical, deep, and realistic debate between 3 agents:
-            1. Dr. Sen (Senior Cardiologist/Professor) - Explains pathophysiology, ACC/AHA/ESC guidelines, and final protocols.
-            2. Dr. Rahul (Resident) - Asks complex clinical questions about drug interactions, contraindications, or specific patient profiles.
-            3. Dr. Anjali (Chief Resident) - Points out recent clinical trials and rare edge cases.
+            CRITICAL INSTRUCTION: You MUST adapt to become a world-class expert in WHATEVER field the topic belongs to (e.g., Programming, AI, Marketing, Science, Medical). You MUST base your discussion on the ABSOLUTE LATEST industry standards, frameworks, tools, and data available in 2025/2026.
+            
+            Generate a highly engaging, deep, and realistic debate between 3 agents:
+            1. Professor AI (Lead Expert) - Explains core concepts and the absolute latest 2026 trends, updates, or paradigms in this specific field.
+            2. Rahul (Curious Learner) - Asks practical, real-world execution questions or common beginner/intermediate doubts.
+            3. Anjali (Advanced Learner) - Points out edge cases, latest 2026 updates, critical challenges, or future scope.
             
             STRICT RULES:
-            - DO NOT use generic phrases like "Welcome class" or "Good question".
-            - Jump straight into high-yield clinical discussion.
-            - Include exact drug names, dosages, side effects, and trial names.
+            - Jump straight into high-yield, cutting-edge discussion.
+            - If the topic is Tech/AI, mention latest models/frameworks. If Business, mention current market trends. If Medical, latest guidelines.
+            - Be specific, technical, and accurate. No generic fluff.
             
             Create exactly 5 turns of conversation.
             Output ONLY a valid JSON array of objects. Do not include markdown tags.
             
             Format exactly like this:
             [
-              {{"role": "assistant", "name": "Dr. Sen (Consultant)", "avatar": "🧑⚕️", "content": "text"}},
-              {{"role": "user", "name": "Dr. Rahul (Resident)", "avatar": "👨⚕️", "content": "text"}},
-              {{"role": "assistant", "name": "Dr. Sen (Consultant)", "avatar": "🧑⚕️", "content": "text"}},
-              {{"role": "user", "name": "Dr. Anjali (Chief Resident)", "avatar": "👩⚕️", "content": "text"}},
-              {{"role": "assistant", "name": "Dr. Sen (Consultant)", "avatar": "🧑⚕️", "content": "text"}}
+              {{"role": "assistant", "name": "Professor AI", "avatar": "🧑🏫", "content": "text"}},
+              {{"role": "user", "name": "Rahul (Learner)", "avatar": "🙋♂️", "content": "text"}},
+              {{"role": "assistant", "name": "Professor AI", "avatar": "🧑🏫", "content": "text"}},
+              {{"role": "user", "name": "Anjali (Advanced Learner)", "avatar": "🙋♀️", "content": "text"}},
+              {{"role": "assistant", "name": "Professor AI", "avatar": "🧑🏫", "content": "text"}}
             ]
             """
 

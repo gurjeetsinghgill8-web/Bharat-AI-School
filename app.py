@@ -102,7 +102,7 @@ def main():
                         content = turn.get("content", "")
 
                         # Force safe default emojis to prevent Streamlit crashes
-                        safe_avatar = "🧑‍⚕️" if role == "assistant" else "👨‍⚕️"
+                        safe_avatar = "🧑‍🏫" if role == "assistant" else "🧑‍🎓"
 
                         with st.chat_message(role, avatar=safe_avatar):
                             st.markdown(f"**{name}**")
