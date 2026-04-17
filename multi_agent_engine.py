@@ -1,62 +1,103 @@
 import os
+import time
 import json
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Configure Gemini
+api_key = os.getenv("GOOGLE_API_KEY")
+if api_key:
+    genai.configure(api_key=api_key)
 
 class ClassroomOrchestrator:
+    """Orchestrates dynamic AI classroom dialogues using Google Gemini."""
+
     @staticmethod
     def generate_classroom_script(topic):
-        if not topic:
-            topic = "Heart Failure"
-            
-        # 1. API Key चेक करना
-        api_key = os.environ.get("GEMINI_API_KEY")
+        """
+        यह फंक्शन Gemini AI का इस्तेमाल करके टीचर और AI स्टूडेंट्स के बीच की लाइव स्क्रिप्ट बनाता है।
+        """
         if not api_key:
-            return [{
-                "role": "assistant", "name": "System Alert", "avatar": "🚨", 
-                "content": "**Error:** असली AI इंजन चालू नहीं हो सका! कृपया अपनी `.env` (या Streamlit secrets) में `GEMINI_API_KEY` डालें।"
-            }]
-            
+            return ClassroomOrchestrator._get_fallback_script(topic)
+
+        # Prompt for Gemini to generate a structured multi-agent script
+        prompt = f"""
+        Act as a multi-agent AI orchestrator for a medical classroom. 
+        Generate a highly engaging, professional classroom debate script about the medical topic: "{topic}".
+        
+        The script MUST be a JSON list of exactly 5 dictionaries with these keys:
+        - "role": Use "assistant" for the Teacher and "user" for Students.
+        - "name": Character name (e.g., "Teacher (AI)", "Rahul (AI Student)", "Anjali (AI Student)").
+        - "avatar": Use these emojis: 🧑‍🏫 for Teacher, 🙋‍♂️ for Rahul, 🙋‍♀️ for Anjali.
+        - "content": Detailed dialogue text in English (but the tone should be encouraging for Hindi-speaking learners).
+        
+        Flow:
+        1. Teacher (assistant) introduces {topic} and its clinical significance.
+        2. Rahul (user) asks a doubt about practical application or emergency triage.
+        3. Teacher (assistant) explains technically but simply.
+        4. Anjali (user) asks about first-line protocols or a specific case detail.
+        5. Teacher (assistant) concludes with a key takeaway.
+        
+        Return ONLY the clean JSON list. Do not include markdown tags or intro/outro text.
+        """
+
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash') 
-            
-            prompt = f"""
-            You are a Multi-Agent Medical Classroom simulator. The topic is: "{topic}"
-            
-            Generate a highly professional, clinical, and realistic debate between 3 agents:
-            1. Teacher (AI) - A senior cardiologist/medical professor.
-            2. Rahul (AI Student) - A curious 2nd-year resident who asks practical, clinical questions.
-            3. Anjali (AI Student) - A sharp resident who points out edge cases, recent guidelines, or contraindications.
-            
-            The content MUST be medically accurate, deep, and engaging. DO NOT use generic phrases.
-            Discuss actual drugs, protocols, pathophysiology, or clinical signs related to the topic.
-            
-            Create exactly 5 turns of conversation.
-            Output ONLY a valid JSON array of objects. Do not include any markdown formatting like ```json.
-            
-            Format exactly like this:
-            [
-              {{"role": "assistant", "name": "Teacher (AI)", "avatar": "🧑‍🏫", "content": "text"}},
-              {{"role": "user", "name": "Rahul (AI Student)", "avatar": "🙋‍♂️", "content": "text"}},
-              {{"role": "assistant", "name": "Teacher (AI)", "avatar": "🧑‍🏫", "content": "text"}},
-              {{"role": "user", "name": "Anjali (AI Student)", "avatar": "🙋‍♀️", "content": "text"}},
-              {{"role": "assistant", "name": "Teacher (AI)", "avatar": "🧑‍🏫", "content": "text"}}
-            ]
-            """
-            
+            # Use the faster Flash model for responsiveness (Updated to Gemini 2.0)
+            model = genai.GenerativeModel('gemini-2.0-flash')
             response = model.generate_content(prompt)
-            text = response.text.strip()
             
-            if text.startswith("```json"):
-                text = text[7:-3]
-            elif text.startswith("```"):
-                text = text[3:-3]
+            # Robust parsing of JSON from the response
+            text = response.text.strip()
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0].strip()
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0].strip()
                 
             script = json.loads(text)
             return script
             
         except Exception as e:
-            return [{
-                "role": "assistant", "name": "Engine Error", "avatar": "⚠️", 
-                "content": f"The AI Engine encountered a problem. Check if `google-generativeai` is installed. Error: {str(e)}"
-            }]
+            # Fallback to the hardcoded engaging script if the API call fails
+            return ClassroomOrchestrator._get_fallback_script(topic)
+
+    @staticmethod
+    def _get_fallback_script(topic):
+        """Engaging fallback script if the AI model is unavailable."""
+        if not topic:
+            topic = "Heart Failure"
+            
+        return [
+            {
+                "role": "assistant", 
+                "name": "Teacher (AI)", 
+                "avatar": "🧑‍🏫", 
+                "content": f"Welcome class! Today we are discussing an important topic: **{topic}**. Let's start with the fundamental concepts. Who can tell me why this is critical?"
+            },
+            {
+                "role": "user", 
+                "name": "Rahul (AI Student)", 
+                "avatar": "🙋‍♂️", 
+                "content": f"Sir, I have a doubt before we begin. How does {topic} directly affect the emergency triage protocol?"
+            },
+            {
+                "role": "assistant", 
+                "name": "Teacher (AI)", 
+                "avatar": "🧑‍🏫", 
+                "content": "Excellent question, Rahul! It is critical because the 'golden hour' dictates patient survival. If we miss the early signs, the mortality rate increases drastically."
+            },
+            {
+                "role": "user", 
+                "name": "Anjali (AI Student)", 
+                "avatar": "🙋‍♀️", 
+                "content": "Adding to what Rahul asked, what are the first-line protocols we must follow as soon as the patient arrives?"
+            },
+            {
+                "role": "assistant", 
+                "name": "Teacher (AI)", 
+                "avatar": "🧑‍🏫", 
+                "content": "Good point, Anjali. The first line protocol includes immediate stabilization of vitals and checking history. Now, let's dive deeper into a clinical case study..."
+            }
+        ]

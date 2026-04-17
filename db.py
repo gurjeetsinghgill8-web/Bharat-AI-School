@@ -36,9 +36,18 @@ def get_supabase():
         return None
 
     if not SUPABASE_URL or not SUPABASE_KEY:
-        st.error("Supabase credentials not found in st.secrets. Please configure them in your Streamlit Cloud dashboard.")
+        st.error("🚨 Supabase credentials not found. Please check your .env file or Streamlit secrets.")
         return None
-    return create_client(SUPABASE_URL, SUPABASE_KEY)
+    
+    # Check for likely invalid key formats (e.g. publishable key instead of anon/service key)
+    if "sb_publishable_" in SUPABASE_KEY or len(SUPABASE_KEY) < 50:
+        st.warning("⚠️ Warning: The current SUPABASE_KEY looks like a public/publishable key. If database operations fail, please ensure you are using the 'anon' or 'service_role' JWT key (usually starts with 'eyJ').")
+
+    try:
+        return create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        st.error(f"🚨 Failed to initialize Supabase client: {str(e)}")
+        return None
 
 
 def _handle_supabase_error(e: Exception, context: str):

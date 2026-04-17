@@ -25,7 +25,7 @@ def query_groq(messages: list) -> str:
     try:
         chat_completion = client.chat.completions.create(
             messages=messages,
-            model="llama3-8b-8192",  # Fast and robust default model on Groq
+            model="llama-3.1-8b-instant",
             temperature=0.7,
             max_tokens=1024,
         )
